@@ -186,3 +186,94 @@ function gps_bgps(gg_lng, gg_lat) {
     gcj02towgs84: gcj02towgs84
   }
 }));
+
+
+
+
+
+/*
+ * @Author: Fred
+ * @Date: 2019-08-15 15:16:51
+ * @LastEditors: Fred
+ * @LastEditTime: 2019-08-15 16:55:10
+ * @Description: file content
+ */
+import axios from '../../http/axios';
+
+export default {
+  state: {
+    map: {},
+    wsView: {
+      center: [106.24585, 30.349281],
+      zoom: 11.6,
+    },
+    mapStyle: 'amap://styles/28006c60645861718fa097bcca30116a',
+    tileLayer: new AMap.TileLayer({
+      visible: true,
+      zIndex: 0,
+    }),
+    building: new AMap.Buildings({
+      zooms: [16, 18],
+      zIndex: 10,
+      heightFactor: 2,
+      zIndex: 1,
+    }),
+  },
+  mutations: {
+    mapInit(state, domID = 'map-container', option = state.wsView) {
+      state.map = new AMap.Map(domID, {
+        zoom: option.zoom,
+        center: option.center,
+        resizeEnable: true,
+        rotateEnable: true,
+        pitchEnable: true,
+        viewMode: '3D',
+        buildingAnimation: true,
+        expandZoomRange: true,
+        layers: [state.tileLayer, state.building],
+        mapStyle: state.mapStyle,
+        pitch: 57,
+      });
+    },
+    // 返回初始位置
+    zoomToOrigin(state) {
+      state.map.setZoomAndCenter(state.wsView.zoom, state.wsView.center);
+    },
+    // 清除图层
+    clearMap(state) {
+      state.map.clearMap();
+      this.commit('zoomToOrigin');
+      this.dispatch('getBorderData');
+      state.map.setZoom(11.6);
+    },
+    // 到指定Zoom
+    GoZoom(state, zoom) {
+      state.map.setZoom(zoom);
+    },
+    // 添加行政区边框
+    addBorder(state, geoData) {
+      const geojson = new AMap.GeoJSON({
+        geoJSON: geoData,
+        getPolygon(geojson, lnglats) {
+          return new AMap.Polygon({
+            bubble: true,
+            strokeWeight: 1,
+            path: lnglats,
+            fillOpacity: 0.15,
+            fillColor: '#1b9ea9',
+            strokeColor: '#1b9ea9',
+            strokeWeight: 4,
+          });
+        },
+      });
+      geojson.setMap(state.map);
+    },
+  },
+  actions: {
+    getBorderData({ commit }) {
+      axios.get('./geo/511622.json').then((res) => {
+        commit('addBorder', res.data);
+      });
+    },
+  },
+};
