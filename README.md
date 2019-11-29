@@ -277,3 +277,24 @@ export default {
     },
   },
 };
+
+
+this.ssMarker = ssMarker.map(item => {
+        let jd = '';
+        let wd = '';
+        if (item.jdLocation) {
+          jd = item.jdLocation.split(',')[0];
+          wd = item.jdLocation.split(',')[1];
+          return new AMap.Marker({
+            map: this.map,
+            icon: new AMap.Icon({
+              size: new AMap.Size(50, 60),
+              imageSize: new AMap.Size(50, 60),
+              image: require('@img/map/tx_ss_point.png')
+            }),
+            topWhenClick: true,
+            position: new AMap.LngLat(jd, wd),
+            extData: item
+          })
+        }
+      })
